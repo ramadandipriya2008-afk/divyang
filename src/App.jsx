@@ -327,8 +327,19 @@ const initialPurchases = [
 const money = n => "₹" + Number(n).toLocaleString("en-IN");
 const read = (key, fallback) => { try { const v=localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch { return fallback; } };
 
+const defaultProfile = {
+  name: "Suresh Kumar",
+  email: "suresh.kumar@example.org",
+  mobile: "+91 98490 54321",
+  state: "Telangana",
+  district: "Hyderabad",
+  pin: "500034",
+  type: "Donor",
+  address: "Road No. 12, Banjara Hills"
+};
+
 export default function App() {
-  const [profile,setProfile] = useState(()=>read("ds-profile",null));
+  const [profile,setProfile] = useState(()=>read("ds-profile",defaultProfile));
   const [isAuthenticated,setIsAuthenticated] = useState(()=>Boolean(read("ds-authenticated",false)));
   const [authMode,setAuthMode] = useState("signup");
   const [page,setPage] = useState("donations");
@@ -522,7 +533,7 @@ export default function App() {
 
   function handleLogout(){
     setIsAuthenticated(false);
-    setProfile(null);
+    setProfile(defaultProfile);
     localStorage.removeItem("ds-authenticated");
     localStorage.removeItem("ds-profile");
     setAuthMode("login");
@@ -729,20 +740,27 @@ export default function App() {
         ))}
       </nav>
 
-      {/* Restored profile tab in sidebar */}
+      {/* User name with profile icon at bottom of sidebar */}
       <div 
         className={`user-mini ${page === "profile" ? "active" : ""}`}
         onClick={() => go("profile")}
-        title={`${profile?.name || "Donor demo profile"} (${t.navProfile})`}
+        title={`${profile?.name || defaultProfile.name} (${t.navProfile})`}
         role="button"
         tabIndex={0}
       >
-        <div className="avatar">{(profile?.name||"DS").split(" ").map(x=>x[0]).join("").slice(0,2).toUpperCase()}</div>
+        <div className="avatar" title={t.navProfile}>
+          <IconProfile size={14} />
+        </div>
         {!sidebarCollapsed && (
-          <div className="user-mini-info">
-            <b>{profile?.name||"Donor demo profile"}</b>
-            <small>{profile?.type||"Donor"} · {t.activeStatus}</small>
-          </div>
+          <>
+            <div className="user-mini-info">
+              <b>{profile?.name || defaultProfile.name}</b>
+              <small>{profile?.type || "Donor"} · {t.activeStatus}</small>
+            </div>
+            <span className="user-mini-arrow">
+              <IconChevronRight size={12} />
+            </span>
+          </>
         )}
       </div>
     </aside>

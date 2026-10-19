@@ -1539,6 +1539,25 @@
   display: none !important;
 }
 
+.user-mini-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8fa29c;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.user-mini:hover .user-mini-arrow,
+.user-mini.active .user-mini-arrow {
+  color: #08766d;
+  transform: translateX(1px);
+}
+
+.sidebar.collapsed .user-mini-arrow {
+  display: none !important;
+}
+
 /* Topbar Expansion Toggle */
 .topbar-left {
   display: flex;
