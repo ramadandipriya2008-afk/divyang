@@ -22,7 +22,9 @@ import {
   IconTruck,
   IconMenu,
   IconChevronLeft,
-  IconChevronRight
+  IconChevronRight,
+  IconIdCard,
+  IconBadgeCheck
 } from "./components/Icons";
 import { translations, getTranslation } from "./translations";
 
@@ -338,10 +340,48 @@ const defaultProfile = {
   address: "Road No. 12, Banjara Hills"
 };
 
+const sampleUdidHolders = [
+  {
+    udid: "TG0120119950012345",
+    name: "Ramesh Kumar",
+    disabilityType: "Locomotor Disability",
+    disabilityPercent: 75,
+    email: "ramesh.udid@example.org",
+    mobile: "+91 98490 12345",
+    state: "Telangana",
+    district: "Hyderabad",
+    pin: "500001",
+    address: "H.No. 4-12/A, Koti, Hyderabad",
+    requiredAid: "Certified Manual Wheelchair"
+  },
+  {
+    udid: "AP0420219980092143",
+    name: "Anitha Reddy",
+    disabilityType: "Orthopedic Impairment",
+    disabilityPercent: 60,
+    email: "anitha.udid@example.org",
+    mobile: "+91 98480 54321",
+    state: "Andhra Pradesh",
+    district: "Vijayawada",
+    pin: "520002",
+    address: "Plot 18, Governorpet, Vijayawada",
+    requiredAid: "Folding Walking Frame"
+  }
+];
+
 export default function App() {
   const [profile,setProfile] = useState(()=>read("ds-profile",defaultProfile));
   const [isAuthenticated,setIsAuthenticated] = useState(()=>Boolean(read("ds-authenticated",false)));
   const [authMode,setAuthMode] = useState("signup");
+  const [authPortal,setAuthPortal] = useState(()=>{
+    if (typeof window !== "undefined" && window.location.hash.toLowerCase().includes("udid")) return "udid";
+    return "general";
+  });
+  const [udidPreview,setUdidPreview] = useState({
+    udid: "TG0120119950012345",
+    name: "Ramesh Kumar",
+    disability: "Locomotor Disability (75%)"
+  });
   const [page,setPage] = useState("donations");
   const [devices,setDevices] = useState(()=>read("ds-devices",initialDevices));
   const [notices,setNotices] = useState(()=>read("ds-notices",initialNotices));
@@ -380,6 +420,26 @@ export default function App() {
     setLanguage(newLang);
     const msg = (translations[newLang] || translations.English).langChangedToast || `Language switched to ${newLang}`;
     setToast(msg);
+  };
+
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = (typeof window !== "undefined" ? window.location.hash : "").toLowerCase();
+      if (hash.includes("udid")) {
+        setAuthPortal("udid");
+      } else if (hash.includes("general")) {
+        setAuthPortal("general");
+      }
+    };
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+  }, []);
+
+  const switchPortal = (p) => {
+    setAuthPortal(p);
+    if (typeof window !== "undefined") {
+      window.location.hash = p === "udid" ? "udid" : "general";
+    }
   };
 
   const unread = notices.filter(n=>n.unread).length;
@@ -513,6 +573,96 @@ export default function App() {
     setToast(`Logged in as ${demoProf.name} (${demoProf.type})`);
   }
 
+  function quickUdidLogin(holder){
+    const prof = {
+      name: holder.name,
+      email: holder.email,
+      mobile: holder.mobile,
+      state: holder.state,
+      district: holder.district,
+      pin: holder.pin,
+      type: "Divyangjan Beneficiary",
+      address: holder.address,
+      udid: holder.udid,
+      disabilityType: holder.disabilityType,
+      disabilityPercent: holder.disabilityPercent,
+      requiredAid: holder.requiredAid,
+      isUdidVerified: true
+    };
+    setProfile(prof);
+    setIsAuthenticated(true);
+    localStorage.setItem("ds-authenticated","true");
+    setPage("purchase");
+    setToast(`Welcome ${prof.name}! Verified UDID ${prof.udid} (100% Free Claim Eligible)`);
+  }
+
+  function submitUdidLogin(e){
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const rawUdid = String(f.get("udidNumber") || "").trim().toUpperCase();
+    if (!rawUdid) {
+      setToast("Please enter your UDID Card Number.");
+      return;
+    }
+    const matched = sampleUdidHolders.find(u => u.udid.toUpperCase() === rawUdid) || {
+      udid: rawUdid,
+      name: "Divyangjan Cardholder",
+      email: "cardholder@example.org",
+      mobile: "+91 98490 12345",
+      state: "Telangana",
+      district: "Hyderabad",
+      pin: "500001",
+      address: "Hyderabad Region",
+      disabilityType: "Locomotor Disability",
+      disabilityPercent: 75,
+      requiredAid: "Certified Manual Wheelchair"
+    };
+
+    const prof = {
+      ...matched,
+      type: "Divyangjan Beneficiary",
+      isUdidVerified: true
+    };
+
+    setProfile(prof);
+    setIsAuthenticated(true);
+    localStorage.setItem("ds-authenticated","true");
+    setPage("purchase");
+    setToast(`Welcome ${prof.name}! UDID: ${prof.udid} verified.`);
+  }
+
+  function submitUdidSignup(e){
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    const rawUdid = String(f.get("udidNumber") || "").trim().toUpperCase();
+    const name = f.get("name") || "Divyangjan Cardholder";
+    const disabilityType = f.get("disabilityType") || "Locomotor Disability";
+    const disabilityPercent = Number(f.get("disabilityPercent") || 75);
+    const requiredAid = f.get("requiredAid") || "Certified Manual Wheelchair";
+
+    const newProf = {
+      name,
+      email: f.get("email") || "beneficiary@example.org",
+      mobile: f.get("mobile") || "+91 98490 00000",
+      state: f.get("state") || "Telangana",
+      district: f.get("district") || "Hyderabad",
+      pin: f.get("pin") || "500001",
+      type: "Divyangjan Beneficiary",
+      address: f.get("address") || "Telangana State",
+      udid: rawUdid || "TG0120119950012345",
+      disabilityType,
+      disabilityPercent,
+      requiredAid,
+      isUdidVerified: true
+    };
+
+    setProfile(newProf);
+    setIsAuthenticated(true);
+    localStorage.setItem("ds-authenticated","true");
+    setPage("purchase");
+    setToast(`Account created for ${newProf.name}! UDID ${newProf.udid} verified (100% Free claim eligible).`);
+  }
+
   function enterAsGuest(){
     const guestProf = {
       name: "Guest Explorer",
@@ -557,10 +707,33 @@ export default function App() {
           <div className="brand">
             <div className="logo"><IconWheelchair size={22} color="#ffffff" /></div>
             <div>
-              <b>Divyang-Sahayak</b>
-              <small>RESTORE DEVICES · RESTORE INDEPENDENCE</small>
+              <b>{t.brandName || "Divyang-Sahayak"}</b>
+              <small>{t.brandSubtitle || "RESTORE INDEPENDENCE"}</small>
             </div>
           </div>
+
+          <div className="auth-portal-selector">
+            <button 
+              type="button" 
+              className={`auth-portal-btn ${authPortal === "general" ? "active" : ""}`}
+              onClick={() => switchPortal("general")}
+              title="Access donor, volunteer and general community portal"
+            >
+              <IconShieldCheck size={14} />
+              <span>{t.generalPortal || "General / Donor Portal"}</span>
+            </button>
+            <button 
+              type="button" 
+              className={`auth-portal-btn ${authPortal === "udid" ? "active" : ""}`}
+              onClick={() => switchPortal("udid")}
+              title="Access Divyangjan beneficiary registration & free device claim with UDID"
+            >
+              <IconIdCard size={15} />
+              <span>{t.udidPortal || "Divyangjan UDID Portal"}</span>
+              <span className="udid-pill-badge">Govt Card</span>
+            </button>
+          </div>
+
           <div className="standalone-header-actions">
             <select value={language} onChange={e=>handleLanguageChange(e.target.value)}>
               <option value="English">English</option>
@@ -575,125 +748,415 @@ export default function App() {
 
         <main className="standalone-auth-main">
           <div className="standalone-auth-card">
-            <div className="standalone-auth-hero">
-              <img 
-                src="/images/auth_hero_lady.png" 
-                alt="Smiling elderly lady in wheelchair" 
-                className="standalone-auth-hero-bg" 
-              />
-              <div className="standalone-auth-hero-overlay"></div>
-              <div className="standalone-auth-hero-content">
-                <div className="auth-hero-badge">
-                  <IconWheelchair size={15} /> <span>Restoring Mobility & Dignity</span>
+            {authPortal === "udid" ? (
+              // =================== DEDICATED UDID PORTAL PAGE ===================
+              <>
+                <div className="standalone-auth-hero udid-hero-theme">
+                  <div className="standalone-auth-hero-content">
+                    <div className="udid-hero-badge">
+                      <IconIdCard size={15} /> <span>Swavlamban UDID Beneficiary Portal</span>
+                    </div>
+                    <h2>{t.udidHeroTitle || "100% Free refurbished mobility devices with your UDID Card."}</h2>
+                    <p>{t.udidHeroSub || "Dedicated government UDID-verified portal for Divyangjan across Telangana & Andhra Pradesh."}</p>
+
+                    {/* Interactive Digital UDID Card Preview */}
+                    <div className="udid-digital-card">
+                      <div className="udid-card-top-row">
+                        <span className="govt-tag">
+                          <IconBadgeCheck size={13} color="#2fe0cc" />
+                          <span>Govt of India · UDID Card</span>
+                        </span>
+                        <span className="udid-status-badge">
+                          ✓ Verified Eligible
+                        </span>
+                      </div>
+                      <div className="udid-card-main-content">
+                        <div className="udid-card-avatar">
+                          <IconWheelchair size={24} color="#ffffff" />
+                        </div>
+                        <div className="udid-card-info">
+                          <div className="udid-card-number">{udidPreview.udid}</div>
+                          <h4 className="udid-card-holder-name">{udidPreview.name}</h4>
+                          <div className="udid-card-subtag">{udidPreview.disability}</div>
+                        </div>
+                      </div>
+                      <div className="udid-card-footer">
+                        <span>ENTITLEMENT: 100% FREE ASSISTIVE DEVICES</span>
+                        <span>SWAVLAMBAN CARD</span>
+                      </div>
+                    </div>
+
+                    <div className="auth-hero-features" style={{marginTop:"18px"}}>
+                      <div className="hero-feature-item">
+                        <span className="feature-check"><IconCheck size={14} /></span>
+                        <span>Free for ≥40% Disability</span>
+                      </div>
+                      <div className="hero-feature-item">
+                        <span className="feature-check"><IconShieldCheck size={14} /></span>
+                        <span>7-Stage Certified Inspection</span>
+                      </div>
+                      <div className="hero-feature-item">
+                        <span className="feature-check"><IconTruck size={14} /></span>
+                        <span>Free Doorstep Delivery</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <h2>Every device restored brings a smile back home.</h2>
-                <p>A transparent, community-led platform connecting donors, mobility equipment, and beneficiaries across Telangana and Andhra Pradesh.</p>
-                <div className="auth-hero-features">
-                  <div className="hero-feature-item">
-                    <span className="feature-check"><IconShieldCheck size={14} /></span>
-                    <span>7-Stage Certified Inspection</span>
+
+                <div className="standalone-auth-form-wrap">
+                  <div className="auth-tab-switch">
+                    <button 
+                      type="button" 
+                      className={`auth-tab-btn ${authMode === "login" ? "active" : ""}`}
+                      onClick={() => setAuthMode("login")}
+                    >
+                      <IconIdCard size={14} style={{verticalAlign:"middle", marginRight:6}} />
+                      {t.udidSignIn || "Sign In with UDID"}
+                    </button>
+                    <button 
+                      type="button" 
+                      className={`auth-tab-btn ${authMode === "signup" ? "active" : ""}`}
+                      onClick={() => setAuthMode("signup")}
+                    >
+                      <IconBadgeCheck size={14} style={{verticalAlign:"middle", marginRight:6}} />
+                      {t.udidSignUp || "Register with UDID"}
+                    </button>
                   </div>
-                  <div className="hero-feature-item">
-                    <span className="feature-check"><IconCheck size={14} /></span>
-                    <span>100% Free with UDID Card</span>
-                  </div>
-                  <div className="hero-feature-item">
-                    <span className="feature-check"><IconTruck size={14} /></span>
-                    <span>Doorstep Pickup & Hubs</span>
+
+                  {authMode === "login" ? (
+                    <form className="auth-form" onSubmit={submitUdidLogin}>
+                      <div className="auth-form-head">
+                        <h3>Divyangjan UDID Sign In</h3>
+                        <p className="sub">Access your beneficiary portal, claim free mobility devices, and track deliveries using your 18-digit UDID card.</p>
+                      </div>
+
+                      <div className="quick-udid-section">
+                        <span className="quick-udid-label">⚡ Instant Test UDID Cardholders:</span>
+                        <div className="quick-udid-grid">
+                          {sampleUdidHolders.map(holder => (
+                            <button
+                              key={holder.udid}
+                              type="button"
+                              className="quick-udid-card-btn"
+                              onClick={() => {
+                                setUdidPreview({
+                                  udid: holder.udid,
+                                  name: holder.name,
+                                  disability: `${holder.disabilityType} (${holder.disabilityPercent}%)`
+                                });
+                                quickUdidLogin(holder);
+                              }}
+                            >
+                              <b>♿ {holder.name}</b>
+                              <code>{holder.udid}</code>
+                              <small>{holder.district} · {holder.disabilityPercent}% {holder.disabilityType}</small>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <Field 
+                        label={t.udidNumberLabel || "UDID Card Number (18 Digits) *"} 
+                        name="udidNumber" 
+                        required 
+                        placeholder={t.udidPlaceholder || "e.g. TG0120119950012345"} 
+                        defaultValue={udidPreview.udid}
+                        onChange={e => {
+                          const val = e.target.value.toUpperCase();
+                          setUdidPreview(prev => ({ ...prev, udid: val || "TG0120119950012345" }));
+                        }}
+                      />
+
+                      <Field 
+                        label="Password or Date of Birth *" 
+                        name="password" 
+                        required 
+                        type="password" 
+                        placeholder="Enter password or DD/MM/YYYY" 
+                        defaultValue="password123" 
+                      />
+
+                      <div className="form-row-between">
+                        <label className="check" style={{margin:0}}>
+                          <input type="checkbox" defaultChecked /> Remember my UDID on this browser
+                        </label>
+                        <a className="forgot-link" onClick={() => setToast("Demo portal: click any test cardholder above or enter your 18-digit number.")}>
+                          UDID help?
+                        </a>
+                      </div>
+
+                      <button type="submit" className="btn primary full" style={{marginTop:"14px", padding:"12px"}}>
+                        Verify UDID & Sign In to Beneficiary Portal →
+                      </button>
+
+                      <div className="auth-switch-prompt">
+                        Don't have a UDID profile registered yet?{" "}
+                        <button type="button" className="link-button" onClick={() => setAuthMode("signup")}>
+                          Register your UDID card here
+                        </button>
+                      </div>
+
+                      <div className="portal-switch-link-card" onClick={() => switchPortal("general")}>
+                        <div className="switch-text">
+                          <p>Are you a Donor, NGO or Volunteer? <b>General Portal</b></p>
+                        </div>
+                        <span className="switch-btn">Switch Portal →</span>
+                      </div>
+                    </form>
+                  ) : (
+                    <form className="auth-form" onSubmit={submitUdidSignup}>
+                      <div className="auth-form-head">
+                        <h3>Register your UDID Card</h3>
+                        <p className="sub">Register your Unique Disability Identity Card to claim 100% free refurbished mobility equipment.</p>
+                      </div>
+
+                      <div className="udid-eligibility-banner">
+                        <IconBadgeCheck size={18} color="#0d5f52" />
+                        <div>
+                          <strong>Free Equipment Eligibility:</strong> UDID cardholders with ≥40% certified disability receive 100% free equipment with zero handling fees.
+                        </div>
+                      </div>
+
+                      <div className="form-grid">
+                        <Field 
+                          label={t.udidNumberLabel || "UDID Card Number (18 Digits) *"} 
+                          name="udidNumber" 
+                          required 
+                          pattern="^[a-zA-Z0-9]{10,20}$"
+                          placeholder="e.g. TG0120119950012345" 
+                          defaultValue="TG0120119950012345" 
+                          onChange={e => {
+                            const val = e.target.value.toUpperCase();
+                            setUdidPreview(prev => ({ ...prev, udid: val || "TG0120119950012345" }));
+                          }}
+                        />
+                        <Field 
+                          label="Full Name (as per UDID Card) *" 
+                          name="name" 
+                          required 
+                          placeholder="e.g. Ramesh Kumar" 
+                          defaultValue="Ramesh Kumar" 
+                          onChange={e => {
+                            const val = e.target.value;
+                            setUdidPreview(prev => ({ ...prev, name: val || "Ramesh Kumar" }));
+                          }}
+                        />
+                        <SelectField 
+                          label={t.disabilityTypeLabel || "Disability Category *"} 
+                          name="disabilityType" 
+                          options={[
+                            "Locomotor Disability",
+                            "Cerebral Palsy",
+                            "Muscular Dystrophy",
+                            "Amputation / Limb Deficiency",
+                            "Dwarfism",
+                            "Visual Impairment",
+                            "Hearing Impairment",
+                            "Multiple Disabilities"
+                          ]} 
+                          defaultValue="Locomotor Disability" 
+                          onChange={e => {
+                            const val = e.target.value;
+                            setUdidPreview(prev => ({ ...prev, disability: `${val} (75%)` }));
+                          }}
+                        />
+                        <Field 
+                          label={t.disabilityPercentLabel || "Disability Percentage (%) *"} 
+                          name="disabilityPercent" 
+                          required 
+                          type="number" 
+                          min="40" 
+                          max="100" 
+                          placeholder="e.g. 75" 
+                          defaultValue="75" 
+                        />
+                        <SelectField 
+                          label={t.requiredAidLabel || "Required Mobility Device *"} 
+                          name="requiredAid" 
+                          options={[
+                            "Certified Manual Wheelchair",
+                            "Transit Wheelchair",
+                            "Folding Walking Frame",
+                            "Four-Wheel Rollator",
+                            "Forearm / Elbow Crutches (pair)",
+                            "Underarm Auxiliary Crutches (pair)"
+                          ]} 
+                          defaultValue="Certified Manual Wheelchair" 
+                        />
+                        <Field label="Mobile Number (linked to UDID) *" name="mobile" required placeholder="+91 98000 00000" defaultValue="+91 98490 12345" />
+                        <Field label="Email Address (optional)" name="email" type="email" placeholder="you@example.com" defaultValue="ramesh.udid@example.org" />
+                        <SelectField label="State *" name="state" options={["Telangana","Andhra Pradesh","Karnataka","Other"]} defaultValue="Telangana" />
+                        <Field label="District *" name="district" required placeholder="e.g. Hyderabad" defaultValue="Hyderabad" />
+                        <Field label="PIN code *" name="pin" required pattern="[0-9]{6}" maxLength="6" placeholder="6 digits" defaultValue="500001" />
+                        <Field label="Complete Delivery Address *" name="address" required placeholder="Door number, street, landmark for doorstep delivery" wide defaultValue="H.No. 4-12/A, Koti, Hyderabad" />
+                        <Field label="Create Password / Security PIN *" name="password" required type="password" minLength="6" placeholder="At least 6 characters" wide defaultValue="password123" />
+                      </div>
+
+                      <label className="check">
+                        <input type="checkbox" required defaultChecked /> I certify that this UDID card is valid and belongs to me or the beneficiary I represent.
+                      </label>
+
+                      <button type="submit" className="btn primary full" style={{marginTop:"10px", padding:"12px"}}>
+                        Verify UDID & Register for Free Equipment →
+                      </button>
+
+                      <div className="auth-switch-prompt">
+                        Already have your UDID registered?{" "}
+                        <button type="button" className="link-button" onClick={() => setAuthMode("login")}>
+                          Sign in with UDID
+                        </button>
+                      </div>
+
+                      <div className="portal-switch-link-card" onClick={() => switchPortal("general")}>
+                        <div className="switch-text">
+                          <p>Are you a Donor, NGO or Volunteer? <b>General Portal</b></p>
+                        </div>
+                        <span className="switch-btn">Switch Portal →</span>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              </>
+            ) : (
+              // =================== GENERAL ACCESS / DONOR PORTAL ===================
+              <>
+                <div className="standalone-auth-hero">
+                  <img 
+                    src="/images/auth_hero_lady.png" 
+                    alt="Smiling elderly lady in wheelchair" 
+                    className="standalone-auth-hero-bg" 
+                  />
+                  <div className="standalone-auth-hero-overlay"></div>
+                  <div className="standalone-auth-hero-content">
+                    <div className="auth-hero-badge">
+                      <IconWheelchair size={15} /> <span>Restoring Mobility & Dignity</span>
+                    </div>
+                    <h2>Every device restored brings a smile back home.</h2>
+                    <p>A transparent, community-led platform connecting donors, mobility equipment, and beneficiaries across Telangana and Andhra Pradesh.</p>
+                    <div className="auth-hero-features">
+                      <div className="hero-feature-item">
+                        <span className="feature-check"><IconShieldCheck size={14} /></span>
+                        <span>7-Stage Certified Inspection</span>
+                      </div>
+                      <div className="hero-feature-item">
+                        <span className="feature-check"><IconCheck size={14} /></span>
+                        <span>100% Free with UDID Card</span>
+                      </div>
+                      <div className="hero-feature-item">
+                        <span className="feature-check"><IconTruck size={14} /></span>
+                        <span>Doorstep Pickup & Hubs</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="standalone-auth-form-wrap">
-              <div className="auth-tab-switch">
-                <button 
-                  type="button" 
-                  className={`auth-tab-btn ${authMode === "signup" ? "active" : ""}`}
-                  onClick={() => setAuthMode("signup")}
-                >
-                  Create Account / Sign Up
-                </button>
-                <button 
-                  type="button" 
-                  className={`auth-tab-btn ${authMode === "login" ? "active" : ""}`}
-                  onClick={() => setAuthMode("login")}
-                >
-                  Sign In / Log In
-                </button>
-              </div>
-
-              {authMode === "login" ? (
-                <form className="auth-form" onSubmit={submitLogin}>
-                  <div className="auth-form-head">
-                    <h3>Welcome to Divyang-Sahayak</h3>
-                    <p className="sub">Sign in to manage your donations, track items, or request mobility devices.</p>
-                  </div>
-
-                  <div className="quick-login-banner">
-                    <span>Quick evaluator access:</span>
-                    <button type="button" className="quick-login-btn" onClick={() => quickLogin("Donor")}>
-                      <IconZap size={14} /> Instant Demo Login
+                <div className="standalone-auth-form-wrap">
+                  <div className="auth-tab-switch">
+                    <button 
+                      type="button" 
+                      className={`auth-tab-btn ${authMode === "signup" ? "active" : ""}`}
+                      onClick={() => setAuthMode("signup")}
+                    >
+                      Create Account / Sign Up
+                    </button>
+                    <button 
+                      type="button" 
+                      className={`auth-tab-btn ${authMode === "login" ? "active" : ""}`}
+                      onClick={() => setAuthMode("login")}
+                    >
+                      Sign In / Log In
                     </button>
                   </div>
 
-                  <Field label="Email or Mobile Number *" name="loginId" required placeholder="you@example.com or +91 98490 00000" defaultValue="suresh.kumar@example.org" />
-                  <Field label="Password *" name="password" required type="password" placeholder="Enter password" defaultValue="password123" />
+                  {authMode === "login" ? (
+                    <form className="auth-form" onSubmit={submitLogin}>
+                      <div className="auth-form-head">
+                        <h3>Welcome to Divyang-Sahayak</h3>
+                        <p className="sub">Sign in to manage your donations, track items, or request mobility devices.</p>
+                      </div>
 
-                  <div className="form-row-between">
-                    <label className="check" style={{margin:0}}>
-                      <input type="checkbox" defaultChecked /> Remember me
-                    </label>
-                    <a className="forgot-link" onClick={() => setToast("Demo portal: enter any password or use Quick Demo Login.")}>Need help?</a>
-                  </div>
+                      <div className="quick-login-banner">
+                        <span>Quick evaluator access:</span>
+                        <button type="button" className="quick-login-btn" onClick={() => quickLogin("Donor")}>
+                          <IconZap size={14} /> Instant Demo Login
+                        </button>
+                      </div>
 
-                  <button type="submit" className="btn primary full" style={{marginTop:"14px", padding:"12px"}}>
-                    Log In to Dashboard →
-                  </button>
+                      <Field label="Email or Mobile Number *" name="loginId" required placeholder="you@example.com or +91 98490 00000" defaultValue="suresh.kumar@example.org" />
+                      <Field label="Password *" name="password" required type="password" placeholder="Enter password" defaultValue="password123" />
 
-                  <div className="auth-switch-prompt">
-                    Don't have an account yet?{" "}
-                    <button type="button" className="link-button" onClick={() => setAuthMode("signup")}>
-                      Sign up here
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <form className="auth-form" onSubmit={submitSignup}>
-                  <div className="auth-form-head">
-                    <h3>Create your account</h3>
-                    <p className="sub">Register as a Donor, Recipient, Volunteer, or NGO partner to share and track devices.</p>
-                  </div>
+                      <div className="form-row-between">
+                        <label className="check" style={{margin:0}}>
+                          <input type="checkbox" defaultChecked /> Remember me
+                        </label>
+                        <a className="forgot-link" onClick={() => setToast("Demo portal: enter any password or use Quick Demo Login.")}>Need help?</a>
+                      </div>
 
-                  <div className="form-grid">
-                    <Field label="Full name *" name="name" required placeholder="e.g. Suresh Kumar" defaultValue={profile?.name || "Suresh Kumar"} />
-                    <Field label="Email address *" name="email" required type="email" placeholder="you@example.com" defaultValue={profile?.email || "suresh.kumar@example.org"} />
-                    <Field label="Mobile number *" name="mobile" required placeholder="+91 98000 00000" defaultValue={profile?.mobile || "+91 98490 54321"} />
-                    <SelectField label="Account type" name="type" options={["Donor","Recipient / caregiver","NGO","Volunteer"]} defaultValue="Donor" />
-                    <SelectField label="State *" name="state" options={["Telangana","Andhra Pradesh","Karnataka","Other"]} defaultValue="Telangana" />
-                    <Field label="District *" name="district" required placeholder="e.g. Hyderabad" defaultValue={profile?.district || "Hyderabad"} />
-                    <Field label="PIN code *" name="pin" required pattern="[0-9]{6}" maxLength="6" placeholder="6 digits" defaultValue={profile?.pin || "500034"} />
-                    <Field label="Complete address *" name="address" required placeholder="Area, street and building" wide defaultValue={profile?.address || "Road No. 12, Banjara Hills"} />
-                    <Field label="Password *" name="password" required type="password" minLength="6" placeholder="At least 6 characters" wide defaultValue="password123" />
-                  </div>
+                      <button type="submit" className="btn primary full" style={{marginTop:"14px", padding:"12px"}}>
+                        Log In to Dashboard →
+                      </button>
 
-                  <label className="check">
-                    <input type="checkbox" required defaultChecked /> I understand this is a demo and agree to the platform guidelines.
-                  </label>
+                      <div className="auth-switch-prompt">
+                        Don't have an account yet?{" "}
+                        <button type="button" className="link-button" onClick={() => setAuthMode("signup")}>
+                          Sign up here
+                        </button>
+                      </div>
 
-                  <button type="submit" className="btn primary full" style={{marginTop:"10px", padding:"12px"}}>
-                    Create Account & Enter Dashboard →
-                  </button>
+                      <div className="portal-switch-link-card" onClick={() => switchPortal("udid")}>
+                        <div className="switch-text">
+                          <p>♿ Are you a Person with Disability? <b>UDID Portal</b></p>
+                          <small style={{color:"#829690"}}>Sign in or register with your government UDID card for 100% free aids.</small>
+                        </div>
+                        <span className="switch-btn">Open UDID Portal →</span>
+                      </div>
+                    </form>
+                  ) : (
+                    <form className="auth-form" onSubmit={submitSignup}>
+                      <div className="auth-form-head">
+                        <h3>Create your account</h3>
+                        <p className="sub">Register as a Donor, Recipient, Volunteer, or NGO partner to share and track devices.</p>
+                      </div>
 
-                  <div className="auth-switch-prompt">
-                    Already have an account?{" "}
-                    <button type="button" className="link-button" onClick={() => setAuthMode("login")}>
-                      Log in here
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
+                      <div className="form-grid">
+                        <Field label="Full name *" name="name" required placeholder="e.g. Suresh Kumar" defaultValue={profile?.name || "Suresh Kumar"} />
+                        <Field label="Email address *" name="email" required type="email" placeholder="you@example.com" defaultValue={profile?.email || "suresh.kumar@example.org"} />
+                        <Field label="Mobile number *" name="mobile" required placeholder="+91 98000 00000" defaultValue={profile?.mobile || "+91 98490 54321"} />
+                        <SelectField label="Account type" name="type" options={["Donor","Recipient / caregiver","NGO","Volunteer"]} defaultValue="Donor" />
+                        <SelectField label="State *" name="state" options={["Telangana","Andhra Pradesh","Karnataka","Other"]} defaultValue="Telangana" />
+                        <Field label="District *" name="district" required placeholder="e.g. Hyderabad" defaultValue={profile?.district || "Hyderabad"} />
+                        <Field label="PIN code *" name="pin" required pattern="[0-9]{6}" maxLength="6" placeholder="6 digits" defaultValue={profile?.pin || "500034"} />
+                        <Field label="Complete address *" name="address" required placeholder="Area, street and building" wide defaultValue={profile?.address || "Road No. 12, Banjara Hills"} />
+                        <Field label="Password *" name="password" required type="password" minLength="6" placeholder="At least 6 characters" wide defaultValue="password123" />
+                      </div>
+
+                      <label className="check">
+                        <input type="checkbox" required defaultChecked /> I understand this is a demo and agree to the platform guidelines.
+                      </label>
+
+                      <button type="submit" className="btn primary full" style={{marginTop:"10px", padding:"12px"}}>
+                        Create Account & Enter Dashboard →
+                      </button>
+
+                      <div className="auth-switch-prompt">
+                        Already have an account?{" "}
+                        <button type="button" className="link-button" onClick={() => setAuthMode("login")}>
+                          Log in here
+                        </button>
+                      </div>
+
+                      <div className="portal-switch-link-card" onClick={() => switchPortal("udid")}>
+                        <div className="switch-text">
+                          <p>♿ Are you a Person with Disability? <b>UDID Portal</b></p>
+                          <small style={{color:"#829690"}}>Sign in or register with your government UDID card for 100% free aids.</small>
+                        </div>
+                        <span className="switch-btn">Open UDID Portal →</span>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </main>
 
@@ -755,7 +1218,7 @@ export default function App() {
           <>
             <div className="user-mini-info">
               <b>{profile?.name || defaultProfile.name}</b>
-              <small>{profile?.type || "Donor"} · {t.activeStatus}</small>
+              <small>{profile?.udid ? `♿ ${profile.udid.slice(0, 8)}… · ${profile?.disabilityPercent || 75}%` : `${profile?.type || "Donor"} · ${t.activeStatus}`}</small>
             </div>
             <span className="user-mini-arrow">
               <IconChevronRight size={12} />

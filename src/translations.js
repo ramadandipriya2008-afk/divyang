@@ -100,7 +100,23 @@ export const translations = {
     inProgress: "In progress",
     pending: "Pending",
     advanceStageBtn: "Advance Stage →",
-    deliveredMsg: "Device successfully allocated & delivered!"
+    deliveredMsg: "Device successfully allocated & delivered!",
+
+    // UDID Portal
+    generalPortal: "General / Donor Portal",
+    udidPortal: "Divyangjan UDID Portal",
+    udidSignIn: "Sign In with UDID",
+    udidSignUp: "Register with UDID",
+    udidNumberLabel: "UDID Card Number (18 Digits) *",
+    udidPlaceholder: "e.g. TG0120119950012345",
+    disabilityTypeLabel: "Disability Category *",
+    disabilityPercentLabel: "Disability Percentage (%) *",
+    requiredAidLabel: "Required Mobility Device *",
+    udidHeroTitle: "Direct free access to refurbished mobility aids with your UDID Card.",
+    udidHeroSub: "Dedicated government UDID-verified portal for Divyangjan across Telangana & Andhra Pradesh.",
+    instantUdidLogin: "Instant UDID Demo Login",
+    switchToUdidPrompt: "Are you a Person with Disability? Switch to Divyangjan UDID Portal →",
+    switchToGeneralPrompt: "Are you a Donor, Volunteer or NGO? Switch to General Portal →"
   },
 
   తెలుగు: {
@@ -203,7 +219,23 @@ export const translations = {
     inProgress: "పురోగతిలో ఉంది",
     pending: "వేచి ఉంది",
     advanceStageBtn: "తదుపరి దశకు తరలించండి →",
-    deliveredMsg: "పరికరం విజయవంతంగా కేటాయించబడింది మరియు పంపిణీ చేయబడింది!"
+    deliveredMsg: "పరికరం విజయవంతంగా కేటాయించబడింది మరియు పంపిణీ చేయబడింది!",
+
+    // UDID Portal
+    generalPortal: "సాధారణ / దాతల పోర్టల్",
+    udidPortal: "దివ్యాంగుల UDID పోర్టల్",
+    udidSignIn: "UDID తో లాగిన్",
+    udidSignUp: "UDID తో నమోదు",
+    udidNumberLabel: "UDID కార్డు సంఖ్య (18 అంకెలు) *",
+    udidPlaceholder: "ఉదా: TG0120119950012345",
+    disabilityTypeLabel: "దివ్యాంగత్వ విభాగం *",
+    disabilityPercentLabel: "దివ్యాంగత్వ శాతం (%) *",
+    requiredAidLabel: "కావలసిన సహాయక పరికరం *",
+    udidHeroTitle: "మీ UDID కార్డుతో ఉచితంగా పునరుద్ధరించిన సహాయక పరికరాలు పొందండి.",
+    udidHeroSub: "తెలంగాణ మరియు ఆంధ్రప్రదేశ్‌లోని దివ్యాంగుల కోసం ప్రత్యేక UDID ధృవీకరణ పోర్టల్.",
+    instantUdidLogin: "తక్షణ UDID డెమో లాగిన్",
+    switchToUdidPrompt: "మీరు దివ్యాంగులా? దివ్యాంగుల UDID పోర్టల్‌కు మారండి →",
+    switchToGeneralPrompt: "మీరు దాత లేదా NGO నా? సాధారణ పోర్టల్‌కు మారండి →"
   },
 
   हिन्दी: {
@@ -306,7 +338,23 @@ export const translations = {
     inProgress: "प्रगति पर है",
     pending: "लंबित",
     advanceStageBtn: "अगले चरण पर जाएं →",
-    deliveredMsg: "उपकरण सफलतापूर्वक आवंटित और वितरित किया गया!"
+    deliveredMsg: "उपकरण सफलतापूर्वक आवंटित और वितरित किया गया!",
+
+    // UDID Portal
+    generalPortal: "सामान्य / दाता पोर्टल",
+    udidPortal: "दिव्यांगजन यूडीआईडी पोर्टल",
+    udidSignIn: "UDID से लॉगिन",
+    udidSignUp: "UDID से पंजीकरण",
+    udidNumberLabel: "UDID कार्ड संख्या (18 अंक) *",
+    udidPlaceholder: "उदा: TG0120119950012345",
+    disabilityTypeLabel: "दिव्यांगता श्रेणी *",
+    disabilityPercentLabel: "दिव्यांगता प्रतिशत (%) *",
+    requiredAidLabel: "आवश्यक सहायक उपकरण *",
+    udidHeroTitle: "अपने UDID कार्ड के साथ 100% निःशुल्क नवीनीकृत सहायक उपकरण प्राप्त करें।",
+    udidHeroSub: "तेलंगाना और आंध्र प्रदेश के दिव्यांगजनों के लिए समर्पित यूडीआईडी सत्यापन पोर्टल।",
+    instantUdidLogin: "त्वरित UDID डेमो लॉगिन",
+    switchToUdidPrompt: "क्या आप दिव्यांगजन हैं? दिव्यांगजन यूडीआईडी पोर्टल पर जाएं →",
+    switchToGeneralPrompt: "क्या आप दाता या एनजीओ हैं? सामान्य पोर्टल पर जाएं →"
   }
 };
 

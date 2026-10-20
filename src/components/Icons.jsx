@@ -222,3 +222,24 @@ export function IconChevronRight({ size = 18, color = "currentColor", strokeWidt
   );
 }
 
+export function IconIdCard({ size = 18, color = "currentColor", strokeWidth = 2, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={`icon ${className}`}>
+      <rect width="20" height="14" x="2" y="5" rx="2" />
+      <circle cx="8" cy="12" r="2.5" />
+      <line x1="13.5" y1="10" x2="18.5" y2="10" />
+      <line x1="13.5" y1="14" x2="16.5" y2="14" />
+    </svg>
+  );
+}
+
+export function IconBadgeCheck({ size = 18, color = "currentColor", strokeWidth = 2, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={`icon ${className}`}>
+      <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" />
+      <polyline points="9 12 11 14 15 10" />
+    </svg>
+  );
+}
+
+
